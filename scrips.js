@@ -4,102 +4,130 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const statusElement = document.getElementById('status');
 
-let isCvReady = false;
+let cvReady = false;
+let videoReady = false;
 
 // This function is called by the "onload" attribute in the OpenCV script tag
 function onOpenCvReady() {
+    statusElement.innerText = 'OpenCV script loaded. Initializing...';
+    // The 'cv' object is now available. onRuntimeInitialized fires when the WASM module is ready.
     cv['onRuntimeInitialized'] = () => {
         statusElement.innerText = 'OpenCV is ready.';
-        isCvReady = true;
-        // Start the main setup process
-        setup();
+        cvReady = true;
+        // Check if we can start the main app logic
+        startApp();
     };
 }
 
 // Main function to set everything up
 async function setup() {
-    // 1. Start the camera feed
+    statusElement.innerText = 'Requesting camera access...';
     await startCamera();
 
-    // Set the canvas size to match the video feed once it's loaded
+    // This event fires once the video's dimensions are known.
     videoElement.addEventListener('loadeddata', () => {
         canvas.width = videoElement.videoWidth;
         canvas.height = videoElement.videoHeight;
-        // Start the detection loop
-        requestAnimationFrame(detectCircles);
+        videoReady = true;
+        statusElement.innerText = 'Camera ready.';
+        // Check if we can start the main app logic
+        startApp();
     });
 }
+
+// A single starting point that waits for both OpenCV and the video
+function startApp() {
+    // Only start the detection loop if both OpenCV and the video are fully ready.
+    if (cvReady && videoReady) {
+        statusElement.innerText = 'Starting detection...';
+        requestAnimationFrame(detectCircles);
+    }
+}
+
 
 // Function to start the camera
 async function startCamera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         videoElement.srcObject = stream;
+        // This promise resolves when the video's metadata has loaded.
         await new Promise((resolve) => {
             videoElement.onloadedmetadata = () => resolve();
         });
     } catch (err) {
         console.error("Error accessing the camera: ", err);
-        statusElement.innerText = "Error: Could not access the camera. Please grant permission.";
+        statusElement.innerText = "Error: Could not access camera. Please grant permission.";
     }
 }
 
 // The AI Loop: Detects circles in the video feed
 function detectCircles() {
-    if (!isCvReady || videoElement.paused || videoElement.ended) {
-        requestAnimationFrame(detectCircles);
+    // Pre-conditions for the loop to run
+    if (!cvReady || !videoReady || videoElement.paused || videoElement.ended) {
+        requestAnimationFrame(detectCircles); // Keep checking
         return;
     }
 
-    // Create an OpenCV Mat (image container) from the video frame
+    // Create OpenCV Mats (image containers).
+    // Using a try...finally block ensures we always clean up memory.
     let src = new cv.Mat(videoElement.videoHeight, videoElement.videoWidth, cv.CV_8UC4);
-    let cap = new cv.VideoCapture(videoElement);
-    cap.read(src);
-
-    // Create a destination Mat for grayscale image
     let gray = new cv.Mat();
-    // Convert the image to grayscale, which is better for circle detection
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-
-    // Apply a blur to reduce noise and improve detection
-    cv.GaussianBlur(gray, gray, new cv.Size(9, 9), 2, 2);
-
-    // Use Hough Circle Transform to find circles
     let circles = new cv.Mat();
-    // Tweak these parameters for better detection:
-    // (source, destination, method, dp, minDist, param1, param2, minRadius, maxRadius)
-    cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, 45, 75, 40, 10, 0);
+    let cap = new cv.VideoCapture(videoElement);
 
-    // Clear the previous drawings from the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    try {
+        // Read a frame from the video feed
+        cap.read(src);
 
-    // Draw the detected circles onto the canvas
-    for (let i = 0; i < circles.cols; ++i) {
-        let x = circles.data32F[i * 3];
-        let y = circles.data32F[i * 3 + 1];
-        let radius = circles.data32F[i * 3 + 2];
+        // Convert the image to grayscale, which is better for circle detection
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-        // Circle outline
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#00FF00'; // Green
-        ctx.stroke();
+        // Apply a blur to reduce noise and improve detection
+        cv.GaussianBlur(gray, gray, new cv.Size(9, 9), 2, 2);
 
-        // Add a status message
-        statusElement.innerText = `Circles Detected: ${circles.cols}`;
+        // Use Hough Circle Transform to find circles
+        // Tweak these parameters for better detection:
+        // (source, destination, method, dp, minDist, param1, param2, minRadius, maxRadius)
+        cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, 45, 75, 40, 10, 0);
+
+        // Clear the previous drawings from the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the detected circles onto the canvas
+        const circleCount = circles.cols;
+        for (let i = 0; i < circleCount; ++i) {
+            let x = circles.data32F[i * 3];
+            let y = circles.data32F[i * 3 + 1];
+            let radius = circles.data32F[i * 3 + 2];
+
+            // Circle outline
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#00FF00'; // Green
+            ctx.stroke();
+        }
+
+        // Update the status message based on detection
+        if (circleCount > 0) {
+            statusElement.innerText = `Circles Detected: ${circleCount}`;
+        } else {
+            statusElement.innerText = "Searching for circles...";
+        }
+
+    } catch(err) {
+        console.error("Error during circle detection:", err);
+    } finally {
+        // IMPORTANT: Clean up memory by deleting the Mats to prevent crashes
+        src.delete();
+        gray.delete();
+        circles.delete();
     }
-    
-    if (circles.cols === 0) {
-        statusElement.innerText = "Searching for circles...";
-    }
 
-    // Clean up memory
-    src.delete();
-    gray.delete();
-    circles.delete();
-
-    // Run this function again on the next frame
+    // Run this function again on the next available frame
     requestAnimationFrame(detectCircles);
 }
+
+// Kick off the setup process when the script loads
+setup();
 
