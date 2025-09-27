@@ -20,10 +20,10 @@ html, body {
 /* Header: Stays at the top */
 .header {
     text-align: center;
-    padding: 0.5rem; /* Reduced padding */
-    flex-shrink: 0;
+    padding: 1rem 0.5rem;
+    flex-shrink: 0; /* Prevents this from shrinking */
     background-color: rgba(0, 0, 0, 0.2);
-    z-index: 10;
+    z-index: 10; /* Ensure header is on top */
     position: relative;
 }
 .header h1, .header p {
@@ -31,66 +31,82 @@ html, body {
     padding: 0;
 }
 .header h1 {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
 }
 .header p {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #aaa;
 }
 
 
 /* Video container: This will grow to fill the available space */
 .video-container {
-    flex-grow: 1;
+    flex-grow: 1; /* This is the key property to make it fill space */
     position: relative;
-    background-color: #000;
+    background-color: #000; /* Black background while camera loads */
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden; /* Hide anything that spills out */
+    overflow: hidden; /* Prevent any overflow */
+    min-height: 300px; /* Ensure minimum height */
 }
 
-/* Video and canvas now fill the container */
+/* Update video and canvas styles for better visibility */
 video, canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border: none;
-    border-radius: 0;
+    object-fit: contain; /* Changed from cover to contain */
 }
 
-video { z-index: 1; }
-canvas { z-index: 2; }
+video {
+    z-index: 1;
+    display: block !important; /* Force display */
+}
 
-/* Controls container: Updated for sliders */
+canvas {
+    z-index: 2;
+    display: block;
+    background-color: transparent; /* Ensures transparency */
+}
+
+/* Controls container: Fixed space at the bottom */
 .controls-container {
-    height: auto; /* Auto height based on content */
-    flex-shrink: 0;
+    height: 120px; /* Reserve a fixed space for buttons */
+    flex-shrink: 0; /* Prevents this from shrinking */
     background-color: #1f1f1f;
     border-top: 1px solid #333;
     display: flex;
-    justify-content: space-around; /* Space out the controls */
+    justify-content: center;
     align-items: center;
-    padding: 0.75rem;
+    padding: 1rem;
     box-sizing: border-box;
+    position: relative;
     z-index: 10;
 }
 
-.control-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 0.8rem;
+/* A placeholder message for the controls area */
+.controls-container::before {
+    content: 'Future buttons will be here';
+    color: #666;
+    font-style: italic;
 }
 
-.control-item label {
-    margin-bottom: 5px;
+/* Add counter display styles */
+#counter-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-top: 0.5rem;
 }
 
-input[type="range"] {
-    width: 100px;
+#circle-count {
+    display: inline-block;
+    min-width: 30px;
+    padding: 2px 8px;
+    background: rgba(76, 175, 80, 0.2);
+    border-radius: 4px;
 }
 

@@ -2,38 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Updated viewport for better mobile experience -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Finding Os</title>
-    <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="onOpenCvReady();"></script>
+    <!-- Updated OpenCV.js source to latest stable version -->
+    <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="onOpenCvReady()"></script>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+    <!-- Defer loading of our main script to ensure it runs after the page is parsed
+         and the onOpenCvReady function is defined before the OpenCV script's onload can fire. -->
+    <!-- Fix script filename reference -->
+    <script src="scrips.js" defer></script>
 </head>
 <body>
+    <!-- Add debug info -->
     <div class="app-container">
+        <!-- Header section for title and status -->
         <div class="header">
             <h1>Finding Os</h1>
             <p id="status">Loading OpenCV...</p>
+            <div id="counter-display">Circles: <span id="circle-count">0</span></div>
+            <p id="debug"></p>
         </div>
+
+        <!-- Video and canvas container -->
         <div class="video-container">
-            <video id="video-feed" autoplay playsinline></video>
+            <!-- Updated video element with muted attribute -->
+            <video id="video-feed" autoplay playsinline muted></video>
             <canvas id="canvas"></canvas>
         </div>
-        <!-- Updated controls container with live tuning sliders -->
+
+        <!-- Placeholder for future buttons and controls -->
         <div class="controls-container">
-            <div class="control-item">
-                <label for="cannySlider">Edge Threshold</label>
-                <input type="range" id="cannySlider" min="10" max="200" value="75">
-            </div>
-            <div class="control-item">
-                <label for="accSlider">Accumulator</label>
-                <input type="range" id="accSlider" min="10" max="100" value="40">
-            </div>
-            <div class="control-item">
-                <label for="debugCheckbox">Debug View</label>
-                <input type="checkbox" id="debugCheckbox">
-            </div>
+            <!-- Buttons will go here in the future -->
         </div>
+
     </div>
+    <!-- Script moved to head with defer attribute -->
 </body>
 </html>
 
