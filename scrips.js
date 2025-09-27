@@ -128,6 +128,9 @@ function detectCircles() {
     requestAnimationFrame(detectCircles);
 }
 
-// Kick off the setup process when the script loads
-setup();
+// **NEW** - Wait for the entire page to load before trying to run our code
+document.addEventListener('DOMContentLoaded', (event) => {
+    // Kick off the setup process
+    setup();
+});
 

@@ -1,38 +1,88 @@
-body {
-    font-family: sans-serif;
+/* Basic resets for a full-screen mobile experience */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* Prevents bouncing/scrolling on mobile */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #121212; /* A dark theme is better for camera apps */
+    color: #e0e0e0;
+}
+
+/* Main application container, using flexbox for layout */
+.app-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    margin: 0;
-    background-color: #f0f0f0;
+    height: 100vh; /* Full viewport height */
 }
 
-/* This container will hold both the video and the canvas */
-.video-container {
+/* Header: Stays at the top */
+.header {
+    text-align: center;
+    padding: 1rem 0.5rem;
+    flex-shrink: 0; /* Prevents this from shrinking */
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: 10; /* Ensure header is on top */
     position: relative;
+}
+.header h1, .header p {
+    margin: 0;
+    padding: 0;
+}
+.header h1 {
+    font-size: 1.5rem;
+}
+.header p {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+
+/* Video container: This will grow to fill the available space */
+.video-container {
+    flex-grow: 1; /* This is the key property to make it fill space */
+    position: relative;
+    background-color: #000; /* Black background while camera loads */
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+/* Video and canvas now fill the container */
 video, canvas {
-    /* Make them overlap */
     position: absolute;
     top: 0;
     left: 0;
-    border: 3px solid #333;
-    border-radius: 10px;
-    width: 80vw; /* Use viewport width for better scaling */
-    max-width: 600px;
-    height: auto;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Fills the container, cropping video if necessary */
+    border: none; /* Remove previous borders */
+    border-radius: 0; /* Remove previous border-radius */
 }
 
-video {
-    z-index: 1; /* Video is on the bottom */
+video { z-index: 1; }
+canvas { z-index: 2; /* Drawing canvas sits on top of the video */ }
+
+/* Controls container: Fixed space at the bottom */
+.controls-container {
+    height: 120px; /* Reserve a fixed space for buttons */
+    flex-shrink: 0; /* Prevents this from shrinking */
+    background-color: #1f1f1f;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 10;
 }
 
-canvas {
-    z-index: 2; /* Canvas is on top for drawing */
+/* A placeholder message for the controls area */
+.controls-container::before {
+    content: 'Future buttons will be here';
+    color: #666;
+    font-style: italic;
 }
+

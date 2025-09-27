@@ -2,20 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Updated viewport for better mobile experience -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Finding Os</title>
     <!-- Load OpenCV.js -->
     <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="onOpenCvReady();"></script>
     <link rel="stylesheet" href="style.css">
+    <!-- Defer loading of our main script to ensure it runs after the page is parsed
+         and the onOpenCvReady function is defined before the OpenCV script's onload can fire. -->
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <h1>Finding Os</h1>
-    <p id="status">Loading OpenCV...</p>
-    <div class="video-container">
-        <video id="video-feed" autoplay playsinline></video>
-        <canvas id="canvas"></canvas>
+    <!-- Main container for the entire app layout -->
+    <div class="app-container">
+
+        <!-- Header section for title and status -->
+        <div class="header">
+            <h1>Finding Os</h1>
+            <p id="status">Loading OpenCV...</p>
+        </div>
+
+        <!-- Video and canvas container -->
+        <div class="video-container">
+            <video id="video-feed" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <!-- Placeholder for future buttons and controls -->
+        <div class="controls-container">
+            <!-- Buttons will go here in the future -->
+        </div>
+
     </div>
-    <script src="script.js"></script>
+    <!-- Script moved to head with defer attribute -->
 </body>
 </html>
 
