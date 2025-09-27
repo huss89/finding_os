@@ -94,3 +94,19 @@ canvas {
     font-style: italic;
 }
 
+/* Add counter display styles */
+#counter-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-top: 0.5rem;
+}
+
+#circle-count {
+    display: inline-block;
+    min-width: 30px;
+    padding: 2px 8px;
+    background: rgba(76, 175, 80, 0.2);
+    border-radius: 4px;
+}
+

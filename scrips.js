@@ -9,12 +9,11 @@ let videoReady = false;
 
 // This function is called by the "onload" attribute in the OpenCV script tag
 function onOpenCvReady() {
-    statusElement.innerText = 'OpenCV script loaded. Initializing...';
-    // The 'cv' object is now available. onRuntimeInitialized fires when the WASM module is ready.
+    console.log("OpenCV.js is loading...");
     cv['onRuntimeInitialized'] = () => {
+        console.log("OpenCV.js is ready!");
         statusElement.innerText = 'OpenCV is ready.';
         cvReady = true;
-        // Check if we can start the main app logic
         startApp();
     };
 }
@@ -100,54 +99,63 @@ function detectCircles() {
     let circles = new cv.Mat();
 
     try {
-        // Capture current video frame to canvas
+        // Capture video frame
         ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        // Read from canvas into OpenCV Mat
-        src = cv.imread(canvas);
-
-        // Convert to grayscale
-        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
         
-        // Improved blur parameters
-        cv.GaussianBlur(gray, gray, new cv.Size(9, 9), 2, 2);
-
-        // Adjusted circle detection parameters
+        // Convert to OpenCV format
+        src = cv.imread(canvas);
+        
+        // Image processing
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+        cv.medianBlur(gray, gray, 5); // Add median blur for noise reduction
+        
+        // Circle detection with adjusted parameters
         cv.HoughCircles(
-            gray,           // input image
-            circles,        // output array
-            cv.HOUGH_GRADIENT, // detection method
-            1,             // dp
-            gray.rows/8,   // minDist
-            100,           // param1
-            30,            // param2
-            20,            // minRadius
-            100           // maxRadius
+            gray,
+            circles,
+            cv.HOUGH_GRADIENT,
+            1,  // dp
+            gray.rows/16,  // minDist
+            100,  // param1
+            20,   // param2 - lower value to detect more circles
+            10,   // minRadius
+            50    // maxRadius
         );
 
-        // Clear previous drawings
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Update circle counter
+        const circleCount = circles.cols || 0;
+        document.getElementById('circle-count').textContent = circleCount;
         
-        // Draw video frame
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
         // Draw detected circles
-        for (let i = 0; circles.cols && i < circles.cols; ++i) {
-            let x = circles.data32F[i * 3];
-            let y = circles.data32F[i * 3 + 1];
-            let radius = circles.data32F[i * 3 + 2];
+        if (circleCount > 0) {
+            console.log(`Found ${circleCount} circles`);
+            for (let i = 0; i < circles.cols; ++i) {
+                let x = circles.data32F[i * 3];
+                let y = circles.data32F[i * 3 + 1];
+                let radius = circles.data32F[i * 3 + 2];
 
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = '#00FF00';
-            ctx.stroke();
+                // Draw circle outline
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                ctx.strokeStyle = '#00FF00';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw center point
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                ctx.fillStyle = '#FF0000';
+                ctx.fill();
+            }
+            statusElement.innerText = `Found ${circleCount} circles`;
+        } else {
+            statusElement.innerText = "Searching for circles...";
+            document.getElementById('circle-count').textContent = '0';
         }
-
-        statusElement.innerText = circles.cols ? `Circles Detected: ${circles.cols}` : "Searching for circles...";
-
+        
     } catch(err) {
-        console.error("Error during circle detection:", err);
-        statusElement.innerText = "Error during detection: " + err.message;
+        console.error("Detection error:", err);
+        statusElement.innerText = "Detection error: " + err.message;
     } finally {
         src.delete();
         gray.delete();
