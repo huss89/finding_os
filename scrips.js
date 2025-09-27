@@ -4,74 +4,102 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const statusElement = document.getElementById('status');
 
-let model;
+let isCvReady = false;
+
+// This function is called by the "onload" attribute in the OpenCV script tag
+function onOpenCvReady() {
+    cv['onRuntimeInitialized'] = () => {
+        statusElement.innerText = 'OpenCV is ready.';
+        isCvReady = true;
+        // Start the main setup process
+        setup();
+    };
+}
 
 // Main function to set everything up
 async function setup() {
-  // 1. Start the camera feed
-  await startCamera();
+    // 1. Start the camera feed
+    await startCamera();
 
-  // Set the canvas size to match the video feed
-  videoElement.addEventListener('loadeddata', () => {
-    canvas.width = videoElement.videoWidth;
-    canvas.height = videoElement.videoHeight;
-  });
-
-  // 2. Load the COCO-SSD model
-  statusElement.innerText = 'Loading Model...';
-  model = await cocoSsd.load();
-  statusElement.innerText = 'Model Loaded! Point your camera at an object.';
-
-  // 3. Start the detection loop
-  detectObjects();
+    // Set the canvas size to match the video feed once it's loaded
+    videoElement.addEventListener('loadeddata', () => {
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        // Start the detection loop
+        requestAnimationFrame(detectCircles);
+    });
 }
 
 // Function to start the camera
 async function startCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    videoElement.srcObject = stream;
-    // We need to wait for the video to start playing to know its dimensions
-    await new Promise((resolve) => {
-      videoElement.onloadedmetadata = () => {
-        resolve();
-      };
-    });
-  } catch (err) {
-    console.error("Error accessing the camera: ", err);
-    alert("Could not access the camera. Please ensure you have given permission.");
-  }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoElement.srcObject = stream;
+        await new Promise((resolve) => {
+            videoElement.onloadedmetadata = () => resolve();
+        });
+    } catch (err) {
+        console.error("Error accessing the camera: ", err);
+        statusElement.innerText = "Error: Could not access the camera. Please grant permission.";
+    }
 }
 
-// Function to detect objects and draw on the canvas (The AI Loop)
-async function detectObjects() {
-  // Clear the previous drawings from the canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+// The AI Loop: Detects circles in the video feed
+function detectCircles() {
+    if (!isCvReady || videoElement.paused || videoElement.ended) {
+        requestAnimationFrame(detectCircles);
+        return;
+    }
 
-  // Use the model to detect objects in the current video frame
-  const predictions = await model.detect(videoElement);
+    // Create an OpenCV Mat (image container) from the video frame
+    let src = new cv.Mat(videoElement.videoHeight, videoElement.videoWidth, cv.CV_8UC4);
+    let cap = new cv.VideoCapture(videoElement);
+    cap.read(src);
 
-  // Loop through each prediction
-  predictions.forEach(prediction => {
-    // prediction.bbox is [x, y, width, height]
-    const [x, y, width, height] = prediction.bbox;
-    const label = `${prediction.class}: ${Math.round(prediction.score * 100)}%`;
+    // Create a destination Mat for grayscale image
+    let gray = new cv.Mat();
+    // Convert the image to grayscale, which is better for circle detection
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-    // Set styling for the drawing
-    ctx.strokeStyle = '#00FF00'; // Green color for the box
-    ctx.lineWidth = 2;
-    ctx.fillStyle = '#00FF00';
-    ctx.font = '16px sans-serif';
+    // Apply a blur to reduce noise and improve detection
+    cv.GaussianBlur(gray, gray, new cv.Size(9, 9), 2, 2);
 
-    // Draw the bounding box
-    ctx.strokeRect(x, y, width, height);
-    // Draw the label
-    ctx.fillText(label, x, y > 10 ? y - 5 : 10); // Don't let label go off-screen
-  });
+    // Use Hough Circle Transform to find circles
+    let circles = new cv.Mat();
+    // Tweak these parameters for better detection:
+    // (source, destination, method, dp, minDist, param1, param2, minRadius, maxRadius)
+    cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, 45, 75, 40, 10, 0);
 
-  // Run this function again on the next frame
-  requestAnimationFrame(detectObjects);
+    // Clear the previous drawings from the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw the detected circles onto the canvas
+    for (let i = 0; i < circles.cols; ++i) {
+        let x = circles.data32F[i * 3];
+        let y = circles.data32F[i * 3 + 1];
+        let radius = circles.data32F[i * 3 + 2];
+
+        // Circle outline
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#00FF00'; // Green
+        ctx.stroke();
+
+        // Add a status message
+        statusElement.innerText = `Circles Detected: ${circles.cols}`;
+    }
+    
+    if (circles.cols === 0) {
+        statusElement.innerText = "Searching for circles...";
+    }
+
+    // Clean up memory
+    src.delete();
+    gray.delete();
+    circles.delete();
+
+    // Run this function again on the next frame
+    requestAnimationFrame(detectCircles);
 }
 
-// Start the whole process!
-setup();

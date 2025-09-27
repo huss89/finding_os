@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-content, initial-scale=1.0">
-    <title>Vision Finding Os</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finding Os</title>
+    <!-- Load OpenCV.js -->
+    <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="onOpenCvReady();"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Vision Finding Os</h1>
-    <p id="status">Loading Model...</p>
+    <h1>Finding Os</h1>
+    <p id="status">Loading OpenCV...</p>
     <div class="video-container">
         <video id="video-feed" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -18,3 +18,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+
