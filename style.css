@@ -20,10 +20,10 @@ html, body {
 /* Header: Stays at the top */
 .header {
     text-align: center;
-    padding: 1rem 0.5rem;
-    flex-shrink: 0; /* Prevents this from shrinking */
+    padding: 0.5rem; /* Reduced padding */
+    flex-shrink: 0;
     background-color: rgba(0, 0, 0, 0.2);
-    z-index: 10; /* Ensure header is on top */
+    z-index: 10;
     position: relative;
 }
 .header h1, .header p {
@@ -31,82 +31,66 @@ html, body {
     padding: 0;
 }
 .header h1 {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
 }
 .header p {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #aaa;
 }
 
 
 /* Video container: This will grow to fill the available space */
 .video-container {
-    flex-grow: 1; /* This is the key property to make it fill space */
+    flex-grow: 1;
     position: relative;
-    background-color: #000; /* Black background while camera loads */
+    background-color: #000;
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden; /* Prevent any overflow */
-    min-height: 300px; /* Ensure minimum height */
+    overflow: hidden; /* Hide anything that spills out */
 }
 
-/* Update video and canvas styles for better visibility */
+/* Video and canvas now fill the container */
 video, canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain; /* Changed from cover to contain */
+    object-fit: cover;
+    border: none;
+    border-radius: 0;
 }
 
-video {
-    z-index: 1;
-    display: block !important; /* Force display */
-}
+video { z-index: 1; }
+canvas { z-index: 2; }
 
-canvas {
-    z-index: 2;
-    display: block;
-    background-color: transparent; /* Ensures transparency */
-}
-
-/* Controls container: Fixed space at the bottom */
+/* Controls container: Updated for sliders */
 .controls-container {
-    height: 120px; /* Reserve a fixed space for buttons */
-    flex-shrink: 0; /* Prevents this from shrinking */
+    height: auto; /* Auto height based on content */
+    flex-shrink: 0;
     background-color: #1f1f1f;
     border-top: 1px solid #333;
     display: flex;
-    justify-content: center;
+    justify-content: space-around; /* Space out the controls */
     align-items: center;
-    padding: 1rem;
+    padding: 0.75rem;
     box-sizing: border-box;
-    position: relative;
     z-index: 10;
 }
 
-/* A placeholder message for the controls area */
-.controls-container::before {
-    content: 'Future buttons will be here';
-    color: #666;
-    font-style: italic;
+.control-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8rem;
 }
 
-/* Add counter display styles */
-#counter-display {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #4CAF50;
-    margin-top: 0.5rem;
+.control-item label {
+    margin-bottom: 5px;
 }
 
-#circle-count {
-    display: inline-block;
-    min-width: 30px;
-    padding: 2px 8px;
-    background: rgba(76, 175, 80, 0.2);
-    border-radius: 4px;
+input[type="range"] {
+    width: 100px;
 }
 

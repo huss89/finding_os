@@ -3,15 +3,17 @@ const videoElement = document.getElementById('video-feed');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const statusElement = document.getElementById('status');
+const cannySlider = document.getElementById('cannySlider');
+const accSlider = document.getElementById('accSlider');
+const debugCheckbox = document.getElementById('debugCheckbox');
 
 let cvReady = false;
 let videoReady = false;
 
 // This function is called by the "onload" attribute in the OpenCV script tag
 function onOpenCvReady() {
-    console.log("OpenCV.js is loading...");
+    statusElement.innerText = 'OpenCV script loaded. Initializing...';
     cv['onRuntimeInitialized'] = () => {
-        console.log("OpenCV.js is ready!");
         statusElement.innerText = 'OpenCV is ready.';
         cvReady = true;
         startApp();
@@ -22,68 +24,32 @@ function onOpenCvReady() {
 async function setup() {
     statusElement.innerText = 'Requesting camera access...';
     await startCamera();
-
-    // This event fires once the video's dimensions are known.
     videoElement.addEventListener('loadeddata', () => {
         canvas.width = videoElement.videoWidth;
         canvas.height = videoElement.videoHeight;
         videoReady = true;
         statusElement.innerText = 'Camera ready.';
-        // Check if we can start the main app logic
         startApp();
     });
 }
 
-// A single starting point that waits for both OpenCV and the video
 function startApp() {
-    // Only start the detection loop if both OpenCV and the video are fully ready.
     if (cvReady && videoReady) {
-        console.log("Starting detection...");
         statusElement.innerText = 'Starting detection...';
-        // Ensure video is visible
-        videoElement.style.display = 'block';
         requestAnimationFrame(detectCircles);
-    } else {
-        console.log("Not ready yet - CV:", cvReady, "Video:", videoReady);
     }
 }
 
-// Function to start the camera
 async function startCamera() {
     try {
-        console.log("Attempting to start camera...");
-        const constraints = {
-            video: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                facingMode: 'environment'
-            }
-        };
-        
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log("Camera access granted:", stream);
-        
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         videoElement.srcObject = stream;
-        videoElement.style.display = 'block';
-        
-        // Wait for video to be ready
         await new Promise((resolve) => {
-            videoElement.onloadedmetadata = () => {
-                console.log("Video metadata loaded");
-                resolve();
-            };
-            videoElement.onerror = (err) => {
-                console.error("Video error:", err);
-            };
+            videoElement.onloadedmetadata = () => resolve();
         });
-
-        // Start playing
-        await videoElement.play();
-        console.log("Video started playing");
-        
     } catch (err) {
-        console.error("Detailed camera error:", err);
-        statusElement.innerText = `Camera Error: ${err.name} - ${err.message}`;
+        console.error("Error accessing the camera: ", err);
+        statusElement.innerText = "Error: Could not access camera. Please grant permission.";
     }
 }
 
@@ -97,65 +63,48 @@ function detectCircles() {
     let src = new cv.Mat(videoElement.videoHeight, videoElement.videoWidth, cv.CV_8UC4);
     let gray = new cv.Mat();
     let circles = new cv.Mat();
+    let cap = new cv.VideoCapture(videoElement);
 
     try {
-        // Capture video frame
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        
-        // Convert to OpenCV format
-        src = cv.imread(canvas);
-        
-        // Image processing
+        cap.read(src);
         cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-        cv.medianBlur(gray, gray, 5); // Add median blur for noise reduction
-        
-        // Circle detection with adjusted parameters
-        cv.HoughCircles(
-            gray,
-            circles,
-            cv.HOUGH_GRADIENT,
-            1,  // dp
-            gray.rows/16,  // minDist
-            100,  // param1
-            20,   // param2 - lower value to detect more circles
-            10,   // minRadius
-            50    // maxRadius
-        );
+        cv.GaussianBlur(gray, gray, new cv.Size(9, 9), 2, 2);
 
-        // Update circle counter
-        const circleCount = circles.cols || 0;
-        document.getElementById('circle-count').textContent = circleCount;
-        
-        // Draw detected circles
+        // --- Read live values from the sliders ---
+        const cannyThreshold = parseInt(cannySlider.value);
+        const accumulatorThreshold = parseInt(accSlider.value);
+
+        cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, 45, cannyThreshold, accumulatorThreshold, 10, 0);
+
+        // --- Handle Debug View ---
+        if (debugCheckbox.checked) {
+            // If debug is on, show the processed grayscale image instead of the video
+            cv.imshow('canvas', gray);
+        } else {
+            // Otherwise, clear the canvas for normal drawing
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        const circleCount = circles.cols;
+        for (let i = 0; i < circleCount; ++i) {
+            let x = circles.data32F[i * 3];
+            let y = circles.data32F[i * 3 + 1];
+            let radius = circles.data32F[i * 3 + 2];
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = debugCheckbox.checked ? '#FF0000' : '#00FF00'; // Red on debug, Green on normal
+            ctx.stroke();
+        }
+
         if (circleCount > 0) {
-            console.log(`Found ${circleCount} circles`);
-            for (let i = 0; i < circles.cols; ++i) {
-                let x = circles.data32F[i * 3];
-                let y = circles.data32F[i * 3 + 1];
-                let radius = circles.data32F[i * 3 + 2];
-
-                // Draw circle outline
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, 2 * Math.PI);
-                ctx.strokeStyle = '#00FF00';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // Draw center point
-                ctx.beginPath();
-                ctx.arc(x, y, 2, 0, 2 * Math.PI);
-                ctx.fillStyle = '#FF0000';
-                ctx.fill();
-            }
-            statusElement.innerText = `Found ${circleCount} circles`;
+            statusElement.innerText = `Circles Detected: ${circleCount}`;
         } else {
             statusElement.innerText = "Searching for circles...";
-            document.getElementById('circle-count').textContent = '0';
         }
-        
+
     } catch(err) {
-        console.error("Detection error:", err);
-        statusElement.innerText = "Detection error: " + err.message;
+        console.error("Error during circle detection:", err);
     } finally {
         src.delete();
         gray.delete();
@@ -165,10 +114,7 @@ function detectCircles() {
     requestAnimationFrame(detectCircles);
 }
 
-// **NEW** - Wait for the entire page to load before trying to run our code
 document.addEventListener('DOMContentLoaded', (event) => {
-    // Kick off the setup process
     setup();
 });
 
-// Note: The OpenCV script tag in the HTML has an "onload" attribute that calls onOpenCvReady()
