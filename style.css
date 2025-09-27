@@ -9,10 +9,30 @@ body {
     background-color: #f0f0f0;
 }
 
-video {
+/* This container will hold both the video and the canvas */
+.video-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+video, canvas {
+    /* Make them overlap */
+    position: absolute;
+    top: 0;
+    left: 0;
     border: 3px solid #333;
     border-radius: 10px;
-    width: 80%;
+    width: 80vw; /* Use viewport width for better scaling */
     max-width: 600px;
-    background-color: #000;
+    height: auto;
+}
+
+video {
+    z-index: 1; /* Video is on the bottom */
+}
+
+canvas {
+    z-index: 2; /* Canvas is on top for drawing */
 }
