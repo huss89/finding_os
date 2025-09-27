@@ -39,23 +39,52 @@ async function setup() {
 function startApp() {
     // Only start the detection loop if both OpenCV and the video are fully ready.
     if (cvReady && videoReady) {
+        console.log("Starting detection...");
         statusElement.innerText = 'Starting detection...';
+        // Ensure video is visible
+        videoElement.style.display = 'block';
         requestAnimationFrame(detectCircles);
+    } else {
+        console.log("Not ready yet - CV:", cvReady, "Video:", videoReady);
     }
 }
 
 // Function to start the camera
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        console.log("Attempting to start camera...");
+        const constraints = {
+            video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                facingMode: 'environment'
+            }
+        };
+        
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        console.log("Camera access granted:", stream);
+        
         videoElement.srcObject = stream;
-        videoElement.play(); // Explicitly start playing
+        videoElement.style.display = 'block';
+        
+        // Wait for video to be ready
         await new Promise((resolve) => {
-            videoElement.onloadedmetadata = () => resolve();
+            videoElement.onloadedmetadata = () => {
+                console.log("Video metadata loaded");
+                resolve();
+            };
+            videoElement.onerror = (err) => {
+                console.error("Video error:", err);
+            };
         });
+
+        // Start playing
+        await videoElement.play();
+        console.log("Video started playing");
+        
     } catch (err) {
-        console.error("Error accessing the camera: ", err);
-        statusElement.innerText = "Error: Could not access camera. Please grant permission.";
+        console.error("Detailed camera error:", err);
+        statusElement.innerText = `Camera Error: ${err.name} - ${err.message}`;
     }
 }
 

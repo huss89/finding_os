@@ -10,16 +10,17 @@
     <link rel="stylesheet" href="style.css">
     <!-- Defer loading of our main script to ensure it runs after the page is parsed
          and the onOpenCvReady function is defined before the OpenCV script's onload can fire. -->
-    <script src="script.js" defer></script>
+    <!-- Fix script filename reference -->
+    <script src="scrips.js" defer></script>
 </head>
 <body>
-    <!-- Main container for the entire app layout -->
+    <!-- Add debug info -->
     <div class="app-container">
-
         <!-- Header section for title and status -->
         <div class="header">
             <h1>Finding Os</h1>
             <p id="status">Loading OpenCV...</p>
+            <p id="debug"></p>
         </div>
 
         <!-- Video and canvas container -->
