@@ -47,22 +47,21 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden; /* Prevent any overflow */
+    min-height: 300px; /* Ensure minimum height */
 }
 
-/* Video and canvas now fill the container */
-video, canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Fills the container, cropping video if necessary */
-    border: none; /* Remove previous borders */
-    border-radius: 0; /* Remove previous border-radius */
+/* Update video and canvas styles for better visibility */
+video {
+    z-index: 1;
+    display: block; /* Ensures no extra space below video */
 }
 
-video { z-index: 1; }
-canvas { z-index: 2; /* Drawing canvas sits on top of the video */ }
+canvas {
+    z-index: 2;
+    display: block;
+    background-color: transparent; /* Ensures transparency */
+}
 
 /* Controls container: Fixed space at the bottom */
 .controls-container {

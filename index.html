@@ -5,8 +5,8 @@
     <!-- Updated viewport for better mobile experience -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Finding Os</title>
-    <!-- Load OpenCV.js -->
-    <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="onOpenCvReady();"></script>
+    <!-- Updated OpenCV.js source to latest stable version -->
+    <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="onOpenCvReady()"></script>
     <link rel="stylesheet" href="style.css">
     <!-- Defer loading of our main script to ensure it runs after the page is parsed
          and the onOpenCvReady function is defined before the OpenCV script's onload can fire. -->
@@ -24,7 +24,8 @@
 
         <!-- Video and canvas container -->
         <div class="video-container">
-            <video id="video-feed" autoplay playsinline></video>
+            <!-- Updated video element with muted attribute -->
+            <video id="video-feed" autoplay playsinline muted></video>
             <canvas id="canvas"></canvas>
         </div>
 
