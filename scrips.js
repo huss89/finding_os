@@ -37,6 +37,12 @@ function onOpenCvReady() {
     };
 }
 
+// Ensure a switchCamera function exists before it's referenced.
+// This stub will be replaced by the real implementation later in this file.
+async function switchCamera() {
+    console.warn('switchCamera called before full initialization.');
+}
+
 // Initialize DOM elements
 function initializeElements() {
     console.log("Initializing DOM elements...");
@@ -69,8 +75,20 @@ function initializeElements() {
     // Camera switch button
     const switchCameraBtn = document.getElementById('switch-camera');
     if (switchCameraBtn) {
-        switchCameraBtn.addEventListener('click', switchCamera);
-        // Hide button if not mobile
+        // Attach listener safely: if switchCamera is available, use it;
+        // otherwise attach a wrapper that calls it once available.
+        if (typeof switchCamera === 'function') {
+            switchCameraBtn.addEventListener('click', switchCamera);
+        } else {
+            switchCameraBtn.addEventListener('click', async () => {
+                if (typeof switchCamera === 'function') {
+                    await switchCamera();
+                } else {
+                    console.warn('switchCamera not available yet');
+                }
+            });
+        }
+        // Hide button if device doesn't support enumerateDevices
         if (!('mediaDevices' in navigator && 'enumerateDevices' in navigator.mediaDevices)) {
             switchCameraBtn.style.display = 'none';
         }
