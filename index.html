@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Finding Os</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Load our script FIRST, then OpenCV -->
-    <script src="script.js"></script>
+    <!-- Fix script reference to match actual filename -->
+    <script src="scrips.js"></script>
 </head>
 <body>
     <!-- Add debug info -->
@@ -62,6 +62,10 @@
                 <span id="fps-counter">FPS: 0</span>
                 <span id="processing-time">Processing: 0ms</span>
             </div>
+            <!-- Add camera switch button -->
+            <button id="switch-camera" class="camera-switch-btn">
+                Switch Camera
+            </button>
         </div>
 
     </div>
@@ -69,8 +73,8 @@
     <!-- Load OpenCV AFTER our script is loaded -->
     <script>
         console.log("Loading OpenCV......");
-        // Create script element for OpenCV
         const opencvScript = document.createElement('script');
+        opencvScript.async = true; // Add async attribute
         opencvScript.src = 'https://docs.opencv.org/4.9.0/opencv.js';
         opencvScript.onload = function() {
             console.log("OpenCV script loaded, calling onOpenCvReady");

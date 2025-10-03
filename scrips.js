@@ -3,6 +3,7 @@ let cvReady = false;
 let videoReady = false;
 let cameraStream = null;
 let detectionRunning = false;
+let currentFacingMode = 'environment'; // Start with rear camera
 
 // Performance tracking
 let frameCount = 0;
@@ -64,6 +65,16 @@ function initializeElements() {
     // Performance tracking
     fpsCounter = document.getElementById('fps-counter');
     processingTime = document.getElementById('processing-time');
+    
+    // Camera switch button
+    const switchCameraBtn = document.getElementById('switch-camera');
+    if (switchCameraBtn) {
+        switchCameraBtn.addEventListener('click', switchCamera);
+        // Hide button if not mobile
+        if (!('mediaDevices' in navigator && 'enumerateDevices' in navigator.mediaDevices)) {
+            switchCameraBtn.style.display = 'none';
+        }
+    }
     
     console.log("DOM elements initialized");
 }
@@ -255,6 +266,7 @@ async function startCamera() {
         
         const constraints = {
             video: {
+                facingMode: currentFacingMode,
                 width: { ideal: 640 },
                 height: { ideal: 480 }
             }
@@ -338,14 +350,15 @@ function updateFPS() {
 // The AI Loop: Detects circles in the video feed
 function detectCircles() {
     if (!cvReady || !videoReady || !videoElement || videoElement.paused || videoElement.ended) {
-        console.log("Skipping frame - not ready or video paused");
-        setTimeout(() => detectCircles(), 33); // Try again in ~33ms (30 FPS)
+        requestAnimationFrame(detectCircles);
         return;
     }
 
     const startTime = performance.now();
     
-    let src, gray, circles;
+    let src = null;
+    let gray = null;
+    let circles = null;
 
     try {
         // Clear canvas and draw current video frame
@@ -417,27 +430,14 @@ function detectCircles() {
         
     } catch(err) {
         console.error("Detection error:", err);
-        if (statusElement) {
-            statusElement.innerText = "Detection error: " + err.message;
-        }
     } finally {
-        // Clean up OpenCV matrices
+        // Safer cleanup with null checks
         if (src) src.delete();
         if (gray) gray.delete();
         if (circles) circles.delete();
     }
 
-    // Update performance metrics
-    const endTime = performance.now();
-    const processingTimeMs = Math.round(endTime - startTime);
-    if (processingTime) {
-        processingTime.textContent = `Processing: ${processingTimeMs}ms`;
-    }
-    
-    updateFPS();
-    
-    // Continue the loop
-    setTimeout(() => detectCircles(), 33); // ~30 FPS
+    requestAnimationFrame(detectCircles);
 }
 
 // Clean up camera stream when page unloads
@@ -455,5 +455,4 @@ document.addEventListener('DOMContentLoaded', (event) => {
     setup();
 });
 // Make onOpenCvReady globally available
-<<<<<<< HEAD
 window.onOpenCvReady = onOpenCvReady;

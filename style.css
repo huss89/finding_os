@@ -139,7 +139,7 @@ canvas {
     background-color: #1f1f1f;
     border-top: 1px solid #333;
     display: flex;
-    justify-content: center;
+    justify-content: space-between; /* Changed from center to space-between */
     align-items: center;
     padding: 1rem;
     box-sizing: border-box;
@@ -168,4 +168,19 @@ canvas {
     padding: 2px 8px;
     background: rgba(76, 175, 80, 0.2);
     border-radius: 4px;
+}
+
+.camera-switch-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 1rem;
+}
+
+.camera-switch-btn:hover {
+    background: #45a049;
 }
