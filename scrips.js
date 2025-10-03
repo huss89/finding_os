@@ -454,10 +454,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     // Kick off the setup process
     setup();
 });
-
 // Make onOpenCvReady globally available
 <<<<<<< HEAD
 window.onOpenCvReady = onOpenCvReady;
-=======
-window.onOpenCvReady = onOpenCvReady;
->>>>>>> ad4afd59dde7574921178198deadf234e300fa96
