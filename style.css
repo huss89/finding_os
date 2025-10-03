@@ -170,19 +170,3 @@ canvas {
     border-radius: 4px;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .controls-panel {
-        padding: 0.5rem;
-    }
-    
-    .control-group {
-        margin-bottom: 0.8rem;
-    }
-    
-    .detection-info {
-        flex-direction: column;
-        gap: 0.5rem;
-        text-align: center;
-    }
-}
