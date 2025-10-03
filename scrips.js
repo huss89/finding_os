@@ -264,6 +264,14 @@ async function startCamera() {
     try {
         console.log("Attempting to start camera...");
         
+        // First check if any camera is available
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter(device => device.kind === 'videoinput');
+        
+        if (cameras.length === 0) {
+            throw new Error('No cameras found on this device');
+        }
+
         const constraints = {
             video: {
                 facingMode: currentFacingMode,
@@ -272,6 +280,7 @@ async function startCamera() {
             }
         };
         
+        console.log("Requesting camera with constraints:", constraints);
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         console.log("Camera access granted");
         
@@ -327,6 +336,59 @@ async function startCamera() {
         
         if (statusElement) {
             statusElement.innerText = errorMessage;
+        }
+    }
+}
+
+// Add this function after the startCamera function
+async function switchCamera() {
+    console.log("Switching camera...");
+    try {
+        // Stop current camera stream if it exists
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
+
+        // Toggle facing mode
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        console.log("New facing mode:", currentFacingMode);
+
+        // Reset video readiness
+        videoReady = false;
+
+        // Request new camera stream
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: currentFacingMode,
+                width: { ideal: 640 },
+                height: { ideal: 480 }
+            }
+        });
+
+        // Update stream and start video
+        cameraStream = stream;
+        videoElement.srcObject = stream;
+        videoElement.style.display = 'block';
+
+        // Wait for video to be ready
+        await videoElement.play();
+        
+        // Update canvas size once new video is loaded
+        videoElement.onloadedmetadata = () => {
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            videoReady = true;
+            startApp();
+        };
+
+        if (statusElement) {
+            statusElement.innerText = `Switched to ${currentFacingMode === 'user' ? 'front' : 'rear'} camera`;
+        }
+
+    } catch (err) {
+        console.error("Error switching camera:", err);
+        if (statusElement) {
+            statusElement.innerText = `Failed to switch camera: ${err.message}`;
         }
     }
 }
