@@ -5,13 +5,9 @@
     <!-- Updated viewport for better mobile experience -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Finding Os</title>
-    <!-- Updated OpenCV.js source to latest stable version -->
-    <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="onOpenCvReady()"></script>
     <link rel="stylesheet" href="style.css">
-    <!-- Defer loading of our main script to ensure it runs after the page is parsed
-         and the onOpenCvReady function is defined before the OpenCV script's onload can fire. -->
-    <!-- Fix script filename reference -->
-    <script src="scrips.js" defer></script>
+    <!-- Load our script FIRST, then OpenCV -->
+    <script src="script.js"></script>
 </head>
 <body>
     <!-- Add debug info -->
@@ -22,6 +18,35 @@
             <p id="status">Loading OpenCV...</p>
             <div id="counter-display">Circles: <span id="circle-count">0</span></div>
             <p id="debug"></p>
+            <!-- Add manual camera permission button -->
+            <button id="camera-btn" style="display: none; margin-top: 10px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Enable Camera
+            </button>
+        </div>
+
+        <!-- Controls for circle detection parameters -->
+        <div class="controls-panel">
+            <div class="control-group">
+                <label for="param1-slider">Edge Detection (param1): <span id="param1-value">100</span></label>
+                <input type="range" id="param1-slider" min="50" max="300" value="100" step="10">
+            </div>
+            
+            <div class="control-group">
+                <label for="param2-slider">Accumulation (param2): <span id="param2-value">30</span></label>
+                <input type="range" id="param2-slider" min="10" max="100" value="30" step="5">
+            </div>
+            
+            <div class="control-group">
+                <label for="min-radius-slider">Min Radius: <span id="min-radius-value">5</span></label>
+                <input type="range" id="min-radius-slider" min="1" max="50" value="5" step="1">
+            </div>
+            
+            <div class="control-group">
+                <label for="max-radius-slider">Max Radius: <span id="max-radius-value">100</span></label>
+                <input type="range" id="max-radius-slider" min="20" max="200" value="100" step="5">
+            </div>
+            
+            <button id="reset-params" class="reset-btn">Reset to Defaults</button>
         </div>
 
         <!-- Video and canvas container -->
@@ -33,11 +58,33 @@
 
         <!-- Placeholder for future buttons and controls -->
         <div class="controls-container">
-            <!-- Buttons will go here in the future -->
+            <div class="detection-info">
+                <span id="fps-counter">FPS: 0</span>
+                <span id="processing-time">Processing: 0ms</span>
+            </div>
         </div>
 
     </div>
-    <!-- Script moved to head with defer attribute -->
+    
+    <!-- Load OpenCV AFTER our script is loaded -->
+    <script>
+        console.log("Loading OpenCV...");
+        // Create script element for OpenCV
+        const opencvScript = document.createElement('script');
+        opencvScript.src = 'https://docs.opencv.org/4.9.0/opencv.js';
+        opencvScript.onload = function() {
+            console.log("OpenCV script loaded, calling onOpenCvReady");
+            if (typeof onOpenCvReady === 'function') {
+                onOpenCvReady();
+            } else {
+                console.error("onOpenCvReady function not found!");
+            }
+        };
+        opencvScript.onerror = function() {
+            console.error("Failed to load OpenCV script");
+            document.getElementById('status').innerText = 'Failed to load OpenCV';
+        };
+        document.head.appendChild(opencvScript);
+    </script>
 </body>
 </html>
-
